@@ -97,12 +97,12 @@ namespace(:pkg) do
     File.open("poolparty.gemspec", "w+") {|f| f << data }
   end
   desc "Get ready to release the gem"
-  task :prerelease => :gemspec_update do
+  task :prerelease => [:gemspec_update] do
     `git add .`
     `git ci -a -m "Updated gemspec for github"`
   end
   desc "Release them gem to the gem server"
-  task :release => :prerelease do
+  task :release => [:prerelease] do
     `git push origin master`
   end
 end
