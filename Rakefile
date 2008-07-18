@@ -81,10 +81,8 @@ namespace(:pkg) do
     File.open('Manifest', 'w') {|f| f << list.join("\n") }
   end
   desc "Build gemspec for github"
-  task :gemspec => :manifest do
+  task :gemspec => [:manifest, :gem] do
     require "yaml"
-    `rm poolparty.gemspec`
-    `rake manifest gem`
     data = YAML.load(open("poolparty.gemspec").read).to_ruby
     File.open("poolparty.gemspec", "w+") {|f| f << data }
   end
