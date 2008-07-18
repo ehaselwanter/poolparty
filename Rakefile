@@ -31,7 +31,6 @@ rescue LoadError => boom
   puts "You are missing a dependency required for meta-operations on this gem."
 end
 
-task :default => :test
 PoolParty.include_tasks
 
 # add spec tasks, if you have rspec installed
