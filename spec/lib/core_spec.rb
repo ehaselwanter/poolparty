@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/spec_helper'
+require File.dirname(__FILE__) + '/../spec_helper'
 
 describe "Hash" do
   it "should preserve the contents of the original hash when safe_merge'ing" do
