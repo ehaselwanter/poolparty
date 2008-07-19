@@ -134,13 +134,16 @@ module PoolParty
         }
       end
       def local_user_data 
-        begin
-          @@timer.timeout(3.seconds) do
-            @local_user_data ||=YAML.load(open("http://169.254.169.254/latest/user-data").read)
-          end
-        rescue Exception => e
-          @local_user_data = {}
+        unless @local_user_data
+          begin
+            @@timer.timeout(3.seconds) do
+              @local_user_data ||=YAML.load(open("http://169.254.169.254/latest/user-data").read)
+            end
+          rescue Exception => e
+            @local_user_data = {}
+          end          
         end
+        @local_user_data
       end
       # For testing purposes
       def reset!
