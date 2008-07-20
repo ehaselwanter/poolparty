@@ -16,12 +16,43 @@ package :rubygems do
   source "http://rubyforge.org/frs/download.php/38646/rubygems-#{version}.tgz" do
     custom_install 'ruby setup.rb'
   end
+  
+  post :install, "sed -i s/require\ 'rubygems'/require\ 'rubygems'\nrequire\ 'rubygems\/gem_runner'/g", "gem update --system", "gem sources -a http://gems.github.com"
+  
   requires :ruby
 end
 
 package :required_gems do
-  description "Pool party gem"
-  gems %w( SQS aws-s3 amazon-ec2 auser-aska rake rcov auser-poolparty vlad --no-ri --no-rdoc)
+  description "Poolparty required gem"
+  gem 'auser-poolparty'
+  requires :s3
+  requires :ec2
+  requires :aska
   
-  requires :rubygems
+  repository "."
+end
+
+package :s3 do
+  description "Amazon s3"
+  gem 'aws-s3'
+  
+  repository "."
+end
+package :ec2 do
+  description "Amazon EC2"
+  gem 'amazon-ec2'
+  
+  repository "."
+end
+package :aska do
+  description "Aska - Expert System"
+  gem 'auser-aska'
+  
+  repository "."
+end
+package :rake do
+  description "Rake"
+  gem 'rake'
+  
+  repository "."
 end

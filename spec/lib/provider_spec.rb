@@ -64,10 +64,10 @@ describe "Provider" do
             Provider.user_install_packages.sort {|a,b| a.to_s <=> b.to_s }.should == [:custom, :sprinkle]
           end
         end
-        it "should not run the installer if we are in testing mode" do
-          @provider.should_not_receive(:process)
-          Provider.install_poolparty(true)
-        end
+        # it "should not run the installer if we are in testing mode" do
+        #   @provider.should_not_receive(:process)
+        #   Provider.install_poolparty(true)
+        # end
       end
     end
   end

@@ -13,7 +13,7 @@ require "aska"
 begin
   require 'crafterm-sprinkle'
 rescue LoadError
-  require "sprinkle"
+  require 'sprinkle'
 end
 require "pp"
 require "tempfile"

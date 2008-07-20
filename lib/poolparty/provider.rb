@@ -14,7 +14,7 @@ module PoolParty
         requires :haproxy
         requires :s3fs
         requires :rsync
-        # requires :required_gems
+        requires :required_gems
         
         PoolParty::Provider.user_install_packages.each do |req|
           self.send :requires, req.to_sym
