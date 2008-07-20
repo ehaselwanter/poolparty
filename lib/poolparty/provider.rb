@@ -17,7 +17,7 @@ module PoolParty
         requires :required_gems
         
         PoolParty::Provider.user_install_packages.each do |req|
-          requires req.to_sym
+          self.send :requires, req.to_sym
         end
       end
       
