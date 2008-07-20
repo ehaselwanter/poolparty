@@ -34,6 +34,7 @@ describe "Provider" do
       describe "user packages" do
         describe "defining" do
           before(:each) do
+            @stdout = nil
             Provider.define_custom_package(:sprinkle) do
               package :sprinkle, :provides => :package do
                 description 'Sprinkle'

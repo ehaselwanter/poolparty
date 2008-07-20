@@ -21,12 +21,7 @@ module PoolParty
         end
       end
       
-      if testing
-        show_process
-      else
-        set_start_with_sprinkle
-        process
-      end
+      testing ? show_process : process
     end
         
     def self.define_custom_package name=:userpackages, &block
@@ -70,19 +65,29 @@ module PoolParty
           prefix   '/usr/local'
           archives '/root/sources'
           builds   '/root/builds'
-        end    
+        end
       end
       
     end
     
     def process
+      set_start_with_sprinkle
       @deployment.process if @deployment
     end
     
     def show_process
       Sprinkle::OPTIONS[:testing] = true
+      Sprinkle::OPTIONS[:verbose] = true      
       Object.logger.level = ActiveSupport::BufferedLogger::Severity::DEBUG
-      @deployment.process if @deployment
+      deployment do
+        delivery :vlad do
+        end
+        source do
+          prefix   '/usr/local'
+          archives '/root/sources'
+          builds   '/root/builds'
+        end
+      end.process
     end
             
     class << self
