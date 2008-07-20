@@ -29,7 +29,7 @@ exiting...
     puts <<-EOM
 To work on this cloud, source the file like: 
   
-  source #{Application.ec2_dir}/#{keyfilename}
+  source $HOME/#{keyfilename}
   
     EOM
   end
