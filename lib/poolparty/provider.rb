@@ -22,12 +22,12 @@ module PoolParty
       end
       
       set_start_with_sprinkle
-      @deployment.process if @deployment
+      process
     end
         
     def self.define_custom_package name=:userpackages, &block
       (user_install_packages << name).uniq!
-      user_packages << block
+      user_packages << yield if block_given?
     end
     
     def user_packages
@@ -69,6 +69,10 @@ module PoolParty
         end    
       end
       
+    end
+    
+    def process
+      @deployment.process if @deployment
     end
             
     class << self

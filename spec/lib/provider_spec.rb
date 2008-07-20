@@ -31,40 +31,37 @@ describe "Provider" do
         @provider.should_receive(:set_start_with_sprinkle).and_return true
         @provider.install_poolparty
       end
-    end
-    describe "user packages" do
-      describe "defining" do
-        before(:each) do
-          Provider.define_custom_package(:sprinkle) do
-            package :sprinkle, :provides => :package do
-              description 'Sprinkle'
-              apt %w( sprinkle )
+      describe "user packages" do
+        describe "defining" do
+          before(:each) do
+            Provider.define_custom_package(:sprinkle) do
+              package :sprinkle, :provides => :package do
+                description 'Sprinkle'
+                apt %w( sprinkle )
+              end
             end
           end
-        end
-        it "should be able to define user packages with blocks and pass those into the user_packages" do
-          Provider.user_packages.size.should == 1
-        end
-        it "should define the user packages as strings" do
-          Provider.user_packages.first.class.should == Proc
-        end
-      end
-      describe "defining custom packages" do
-        before(:each) do
-          Provider.reset!
-          Provider.define_custom_package(:custom) do
-            <<-EOE
-              package :custom do
-                description 'custom packages'
-              end
-            EOE
+          it "should be able to define user packages with blocks and pass those into the user_packages" do
+            Provider.user_packages.size.should == 1
+          end
+          it "should define the user packages as Sprinkle::Package::Package" do
+            Provider.user_packages.first.class.should == Sprinkle::Package::Package
           end
         end
-        it "should be able to define a custom package with a name" do
-          Provider.user_packages.size.should > 1
-        end
-        it "should have the name of the custom package built in" do
-          Provider.user_install_packages.sort {|a,b| a.to_s <=> b.to_s }.should == [:custom, :sprinkle]
+        describe "defining custom packages" do
+          before(:each) do
+            Provider.reset!
+            @provider.stub!(:set_start_with_sprinkle).and_return true
+            @provider.stub!(:process).and_return true
+            @proc = lambda {package :custom do;description 'custom packages';end}
+            Provider.define_custom_package(:custom)
+          end
+          it "should be able to define a custom package with a name" do
+            Provider.user_packages.size.should > 1
+          end
+          it "should have the name of the custom package built in" do
+            Provider.user_install_packages.sort {|a,b| a.to_s <=> b.to_s }.should == [:custom, :sprinkle]
+          end
         end
       end
     end
