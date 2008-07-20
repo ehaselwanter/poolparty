@@ -63,6 +63,11 @@ To work on this cloud, source the file like:
     puts PoolParty.options(ARGV.dup)
     puts "Using keypair at: #{Application.keypair_path}"
   end
+  desc "Installation listing"
+  task :list_install => :initialize do
+    puts "-- packages to install --"
+    Provider.install_poolparty(true)
+  end
   desc "Authorize base ports for application"
   task :authorize_ports => :initialize do
     run <<-EOR

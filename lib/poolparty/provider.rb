@@ -2,7 +2,7 @@ module PoolParty
   class Provider
     include Sprinkle
         
-    def install_poolparty
+    def install_poolparty(testing=false)
       PoolParty.message "Installing required poolparty paraphernalia"
       load_packages
       user_packages.map {|blk| blk.call if blk }
@@ -21,8 +21,12 @@ module PoolParty
         end
       end
       
-      set_start_with_sprinkle
-      process
+      if testing
+        show_process
+      else
+        set_start_with_sprinkle
+        process
+      end
     end
         
     def self.define_custom_package name=:userpackages, &block
@@ -74,12 +78,18 @@ module PoolParty
     def process
       @deployment.process if @deployment
     end
+    
+    def show_process
+      Sprinkle::OPTIONS[:testing] = true
+      Object.logger.level = ActiveSupport::BufferedLogger::Severity::DEBUG
+      @deployment.process if @deployment
+    end
             
     class << self
       require "sprinkle"
             
-      def install_poolparty
-        singleton.install_poolparty
+      def install_poolparty(testing=false)
+        singleton.install_poolparty(testing)
       end
       def singleton
         @singleton ||= new
