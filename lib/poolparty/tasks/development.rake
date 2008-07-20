@@ -55,6 +55,9 @@ To work on this cloud, source the file like:
     EOR
     puts "Don't forget to replace your ~/.ec2/#{Application.keypair}/*.pem keys with the real amazon keys"
   end
+  desc "Initialize setup"
+  task :initialize => [:setup_pemkeys]
+  
   desc "Just an argv test"
   task :test => :init do
     puts "---- Testing ----"
