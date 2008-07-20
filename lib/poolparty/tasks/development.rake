@@ -35,10 +35,8 @@ To work on this cloud, source the file like:
   end
   desc "Generate a new keypair"
   task :setup_keypair => [:initialize] do
-    Application.keypair ||= "#{File.basename(Dir.pwd)}"
-    if File.file?(Application.keypair_path)
-      run "ec2-delete-keypair #{Application.keypair}"
-    end
+    Application.keypair ||= "#{File.basename(Dir.pwd)}"    
+    run "ec2-delete-keypair #{Application.keypair}" if File.file?(Application.keypair_path)
     puts "-- setting up keypair named #{Application.keypair} in #{Application.keypair_path}"
     run <<-EOR        
       chmod 600 #{Application.keypair_path} 2>/dev/null
@@ -63,6 +61,7 @@ To work on this cloud, source the file like:
   task :test => :initialize do
     puts "---- Testing ----"
     puts PoolParty.options(ARGV.dup)
+    puts "Using keypair at: #{Application.keypair_path}"
   end
   desc "Authorize base ports for application"
   task :authorize_ports => :initialize do
