@@ -35,15 +35,13 @@ To work on this cloud, source the file like:
   end
   desc "Generate a new keypair"
   task :setup_keypair => [:initialize] do
-    unless File.file?(Application.keypair_path)
-      Application.keypair ||= "cloud"
-      puts "-- setting up keypair named #{Application.keypair}"
-      run <<-EOR        
-        chmod 600 #{Application.keypair_path} 2>/dev/null
-        mkdir ~/.ec2/#{Application.keypair} 2>/dev/null
-        ec2-add-keypair #{Application.keypair} > #{Application.keypair_path}
-      EOR
-    end
+    Application.keypair ||= "#{File.basename(Dir.pwd)}"
+    puts "-- setting up keypair named #{Application.keypair} in #{Application.keypair_path}"
+    run <<-EOR        
+      chmod 600 #{Application.keypair_path} 2>/dev/null
+      mkdir ~/.ec2/#{Application.keypair} 2>/dev/null
+      ec2-add-keypair #{Application.keypair} > #{Application.keypair_path}
+    EOR
   end
   desc "Setup pem keys"
   task :setup_pemkeys => [:initialize] do    
