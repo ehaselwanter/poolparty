@@ -36,6 +36,9 @@ To work on this cloud, source the file like:
   desc "Generate a new keypair"
   task :setup_keypair => [:initialize] do
     Application.keypair ||= "#{File.basename(Dir.pwd)}"
+    if File.file?(Application.keypair_path)
+      run "ec2-delete-keypair #{Application.keypair}"
+    end
     puts "-- setting up keypair named #{Application.keypair} in #{Application.keypair_path}"
     run <<-EOR        
       chmod 600 #{Application.keypair_path} 2>/dev/null
