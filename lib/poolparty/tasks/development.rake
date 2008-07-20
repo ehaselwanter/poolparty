@@ -1,11 +1,11 @@
 namespace(:dev) do
-  task :init do
+  task :initialize do
     setup_application
     run "mkdir ~/.ec2 >/dev/null 2>/dev/null" unless File.directory?("~/.ec2")      
   end
   # Setup a basic development environment for the user 
   desc "Setup development environment specify the config_file"
-  task :setup => [:init, :setup_keypair] do    
+  task :setup => [:initialize, :setup_keypair] do    
     certloc = "#{Application.ec2_dir}/#{Application.keypair}/cert-*.pem 2>/dev/null"
     pkloc = "#{Application.ec2_dir}/#{Application.keypair}/pk-*.pem 2>/dev/null"
     unless `ls #{certloc}`.length > 1 && `ls #{pkloc}`.length > 1
@@ -34,7 +34,7 @@ To work on this cloud, source the file like:
     EOM
   end
   desc "Generate a new keypair"
-  task :setup_keypair => [:init] do
+  task :setup_keypair => [:initialize] do
     unless File.file?(Application.keypair_path)
       Application.keypair ||= "cloud"
       puts "-- setting up keypair named #{Application.keypair}"
@@ -46,7 +46,7 @@ To work on this cloud, source the file like:
     end
   end
   desc "Setup pem keys"
-  task :setup_pemkeys => [:init] do    
+  task :setup_pemkeys => [:initialize] do    
     puts "Setting up stubbed pem keys in ~/.ec2/#{Application.keypair}"
     run <<-EOR
       mkdir -p ~/.ec2/#{Application.keypair} 2>/dev/null
@@ -55,16 +55,16 @@ To work on this cloud, source the file like:
     EOR
     puts "Don't forget to replace your ~/.ec2/#{Application.keypair}/*.pem keys with the real amazon keys"
   end
-  desc "Initialize setup"
-  task :initialize => [:setup_pemkeys]
+  desc "initializeialize setup"
+  task :initializeialize => [:setup_pemkeys]
   
   desc "Just an argv test"
-  task :test => :init do
+  task :test => :initialize do
     puts "---- Testing ----"
     puts PoolParty.options(ARGV.dup)
   end
   desc "Authorize base ports for application"
-  task :authorize_ports => :init do
+  task :authorize_ports => :initialize do
     run <<-EOR
       ec2-authorize -p 22 default
       ec2-authorize -p 80 default
