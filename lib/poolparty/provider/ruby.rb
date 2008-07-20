@@ -25,4 +25,6 @@ end
 package :required_gems do
   description "Pool party gem"
   gems %w( SQS aws-s3 amazon-ec2 auser-aska rake rcov auser-poolparty vlad --no-ri --no-rdoc)
+  
+  requires :rubygems
 end
