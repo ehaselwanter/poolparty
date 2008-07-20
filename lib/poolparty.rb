@@ -48,7 +48,7 @@ module PoolParty
   class Version #:nodoc:
     @major = 0
     @minor = 1
-    @tiny  = 1
+    @tiny  = 2
 
     def self.string
       [@major, @minor, @tiny].join('.')
