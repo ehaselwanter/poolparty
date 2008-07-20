@@ -28,31 +28,21 @@ package :required_gems do
   requires :s3
   requires :ec2
   requires :aska
-  
-  repository "."
 end
 
 package :s3 do
   description "Amazon s3"
   gem 'aws-s3'
-  
-  repository "."
 end
 package :ec2 do
   description "Amazon EC2"
   gem 'amazon-ec2'
-  
-  repository "."
 end
 package :aska do
   description "Aska - Expert System"
   gem 'auser-aska'
-  
-  repository "."
 end
 package :rake do
   description "Rake"
   gem 'rake'
-  
-  repository "."
 end
