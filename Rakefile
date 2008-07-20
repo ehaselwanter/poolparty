@@ -22,7 +22,8 @@ begin
 
       For more information, check http://poolpartyrb.com
       On IRC: 
-        irc.freenode.net / #poolpartyrb
+        irc.freenode.net
+        #poolpartyrb
         
       *** Ari Lerner @ <ari.lerner@citrusbyte.com> ***
     }
