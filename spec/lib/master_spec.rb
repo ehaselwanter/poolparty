@@ -357,14 +357,8 @@ describe "Master" do
           @master.should_receive(:copy_pem_files_to_tmp_dir).and_return true
           @master.build_and_send_config_files_in_temp_directory
         end
-        it "should try to copy the cert file" do
-          File.should_receive(:copy).with("/Users/auser/.ec2/current/cert-56EMRIBSJ56JJ5P6QEGXICFOO6DDVVDD.pem", "/Users/auser/Sites/work/citrusbyte/internal/gems/pool-party/pool/tmp/cert-56EMRIBSJ56JJ5P6QEGXICFOO6DDVVDD.pem")                     
-          @master.copy_pem_files_to_tmp_dir
-        end
-        it "should try the copy the pk file" do
-          File.should_receive(:copy).with("/Users/auser/.ec2/current/pk-56EMRIBSJ56JJ5P6QEGXICFOO6DDVVDD.pem", "/Users/auser/Sites/work/citrusbyte/internal/gems/pool-party/pool/tmp/pk-56EMRIBSJ56JJ5P6QEGXICFOO6DDVVDD.pem")
-          @master.copy_pem_files_to_tmp_dir
-        end
+        it "should try to copy the cert file"
+        it "should try the copy the pk file"
         describe "get configs" do
           before(:each) do
             @master.stub!(:user_dir).and_return("user")
