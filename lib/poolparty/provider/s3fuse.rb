@@ -6,6 +6,10 @@ package :s3fs do
     
     post :install, "mv s3fs /usr/bin"
   end
+  
+  verify do
+    has_executable 's3fs'
+  end  
     
   requires :s3fs_deps
 end

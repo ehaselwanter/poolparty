@@ -34,6 +34,13 @@ def stub_option_load
     Application.reset!
 end
 
+def hide_output
+  old_stdout = $stdout
+  $stdout.reopen(File.open((PLATFORM =~ /mswin/ ? "NUL" : "/dev/null"), 'w'))
+  yield if block_given?
+  $stdout = old_stdout
+end
+
 def wait_launch(time=5)
   pid = fork {yield}
   wait time

@@ -2,6 +2,10 @@ package :ruby do
   description 'Ruby Virtual Machine'
   apt %w( ruby ruby1.8-dev )
   requires :ruby_dependencies
+  
+  verify do
+    has_executable 'ruby'
+  end
 end
 
 package :ruby_dependencies do
@@ -19,6 +23,10 @@ package :rubygems do
   post :install, "sed -i s/require\ 'rubygems'/require\ 'rubygems'\nrequire\ 'rubygems\/gem_runner'/g", "gem update --system", "gem sources -a http://gems.github.com"
   
   requires :ruby
+  
+  verify do
+    has_executable 'gem'
+  end
 end
 
 package :required_gems do
@@ -27,21 +35,31 @@ package :required_gems do
   requires :s3
   requires :ec2
   requires :aska
+  
+  has_gem 'auser-poolparty'
 end
 
 package :s3 do
   description "Amazon s3"
   gem 'aws-s3'
+  
+  has_gem 'aws-s3'
 end
 package :ec2 do
   description "Amazon EC2"
   gem 'amazon-ec2'
+  
+  has_gem 'amazon-ec2'
 end
 package :aska do
   description "Aska - Expert System"
   gem 'auser-aska'
+  
+  has_gem 'auser-aska'
 end
 package :rake do
   description "Rake"
   gem 'rake'
+  
+  has_gem 'rake'
 end
