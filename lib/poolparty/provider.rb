@@ -8,7 +8,6 @@ module PoolParty
       user_packages.map {|blk| blk.call if blk }
 
       policy :poolparty, :roles => :app do
-        requires :git
         requires :ruby
         requires :heartbeat
         requires :haproxy
