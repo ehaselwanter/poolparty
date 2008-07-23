@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.dirname(__FILE__) + '/../../spec_helper'
 
 describe "Plugin manager" do
   before(:each) do

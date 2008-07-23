@@ -1,5 +1,5 @@
-require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + '/../helpers/ec2_mock'
+require File.dirname(__FILE__) + '/../../spec_helper'
+require File.dirname(__FILE__) + '/../../helpers/ec2_mock'
 
 describe "Master" do
   before(:each) do
@@ -10,7 +10,7 @@ describe "Master" do
     
     Application.options
     
-    Application.options.stub!(:contract_when).and_return("web > 30.0\n cpu < 0.10")
+    Application.options.stub!(:contract_when).and_return("web > 30.0\n cpu > 0.80")
     Application.options.stub!(:expand_when).and_return("web < 3.0\n cpu > 0.80")    
     @master = Master.new
   end  
@@ -280,6 +280,10 @@ describe "Master" do
       it "should check the stats of the cloud"
     end
     describe "expanding and contracting" do
+      before(:each) do
+        Application.options.stub!(:contract_when).and_return("web > 30.0\n cpu > 0.80")
+        Application.options.stub!(:expand_when).and_return("web < 3.0\n cpu > 0.80")
+      end
       it "should be able to say that it should not contract" do            
         @master.stub!(:web).and_return(10.2)
         @master.stub!(:cpu).and_return(0.32)
@@ -287,8 +291,8 @@ describe "Master" do
         @master.contract?.should == false
       end
       it "should be able to say that it should contract" do
-        @master.should_receive(:cpu).once.and_return(0.05)
-        @master.should_receive(:web).once.and_return(35.2)
+        @master.should_receive(:cpu).at_least(1).and_return(0.95)
+        @master.should_receive(:web).at_least(1).and_return(35.2)
         
         @master.contract?.should == true
       end

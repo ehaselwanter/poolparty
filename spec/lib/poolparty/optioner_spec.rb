@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../spec_helper'
+require File.dirname(__FILE__) + '/../../spec_helper'
 
 describe "Optioner with options" do
   it "should be able to pull out the lonely arguments without any switches" do

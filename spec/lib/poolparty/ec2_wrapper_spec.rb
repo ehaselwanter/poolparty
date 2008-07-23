@@ -1,5 +1,5 @@
-require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + "/../helpers/ec2_mock"
+require File.dirname(__FILE__) + '/../../spec_helper'
+require File.dirname(__FILE__) + "/../../helpers/ec2_mock"
 
 class EC2Test
   include Ec2Wrapper
@@ -14,7 +14,7 @@ class EC2Test
     @resp3 = EC2::Response.parse(:xml => read_file("remote_desc_response"))
   end
   def read_file(name)
-    open("#{File.dirname(__FILE__)}/../files/#{name}").read
+    open("#{File.dirname(__FILE__)}/../../files/#{name}").read
   end
 end
 describe "EC2ResponseObject" do

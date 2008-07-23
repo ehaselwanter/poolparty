@@ -1,5 +1,5 @@
-require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + "/../helpers/ec2_mock"
+require File.dirname(__FILE__) + '/../../spec_helper'
+require File.dirname(__FILE__) + '/../../helpers/ec2_mock'
 
 describe "Provider" do
   before(:each) do
@@ -66,9 +66,9 @@ describe "Provider" do
         end
         it "should not run the installer if we are in testing mode" do
           @provider.should_not_receive(:process)
-          hide_output do            
+          # hide_output do            
             Provider.install_poolparty(true)
-          end
+          # end
         end
       end
     end

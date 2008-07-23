@@ -1,7 +1,7 @@
 module PoolParty
   class PluginSpecHelper
     def self.define_stubs(klass, num=1)
-      require File.dirname(__FILE__) + "/../../spec/helpers/ec2_mock"
+      require File.dirname(__FILE__) + '/../../spec/helpers/ec2_mock'
       
       @klass = klass.send :new
       klass.stub!(:new).and_return @klass

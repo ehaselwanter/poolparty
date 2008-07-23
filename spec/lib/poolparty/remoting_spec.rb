@@ -1,5 +1,5 @@
-require File.dirname(__FILE__) + '/../spec_helper'
-require File.dirname(__FILE__) + "/../helpers/ec2_mock"
+require File.dirname(__FILE__) + '/../../spec_helper'
+require File.dirname(__FILE__) + '/../../helpers/ec2_mock'
 
 describe "Master remoting: " do
   before(:each) do
