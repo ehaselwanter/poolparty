@@ -81,10 +81,21 @@ describe "Application" do
     it "should be able tp pull out the secret_access_key from the user-data" do
       Application.local_user_data[:secret_access_key].should == "pi"
     end
+    it "should not have the application name in the user-data" do
+      Application.local_user_data[:application_name].should be_nil
+    end
+    it "should have the application_name in the options even though it is nil in the application" do
+      Application.options.app_name.should_not be_nil
+    end
     it "should overwrite the default_options when passing in to the instance data" do      
       Application.stub!(:default_options).and_return({:access_key => 42})
-      # Application.local_user_data
       Application.options.access_key.should == 3.14159
+    end
+    it "should have the required lauching hash" do
+      Application.hash_to_launch_with.should == {:access_key=>3.14159, :keypair_path=>"/mnt", :keypair=>"testappkeypair", :secret_access_key=>"pi", :user_data=>"", :polling_time=>"30.seconds"}      
+    end
+    it "should create the hash_to_launch_with a YAML string" do
+      Application.launching_user_data.should == Application.hash_to_launch_with.to_yaml
     end
   end
   it "should parse and use a config file if it is given for the options" do
