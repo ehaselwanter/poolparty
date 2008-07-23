@@ -1,4 +1,11 @@
 module PoolParty
+  module Ec2Wrapper
+    module InstanceMethods
+      def ec2
+        @ec2 ||= EC2::Base.new(:access_key_id => "access", :secret_access_key => "shhhh")
+      end
+    end
+  end
   class Master
     def launch_new_instance!
       letter = ("a".."z").to_a[instances.size] # For unique instance_ids

@@ -84,4 +84,27 @@ describe "EC2ResponseObject" do
       EC2ResponseObject.get_descriptions(@rst).select {|a| a[:keypair] == "auser"}.should_not be_empty
     end
   end
+  describe "launching" do
+    before(:each) do
+      @test.ec2.stub!(:run_instances).and_return true
+    end
+    it "should launch with the ami" do
+      Application.should_receive(:ami).once.and_return("ami-abcdefg")
+    end
+    it "should with the user data" do
+      Application.should_receive(:launching_user_data).once.and_return("")      
+    end
+    it "should launch with the Application keypair" do
+      Application.should_receive(:keypair)
+    end
+    it "should launch with the requested size" do
+      Application.should_receive(:size)
+    end
+    it "should try to run the instances" do
+      @test.ec2.should_receive(:run_instances)
+    end
+    after do
+      @test.launch_new_instance!
+    end
+  end
 end

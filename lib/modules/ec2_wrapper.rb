@@ -14,7 +14,8 @@ module PoolParty
           :user_data => "#{Application.launching_user_data}",
           :minCount => 1,
           :maxCount => 1,
-          :key_name => Application.keypair,
+          :key_name => "#{Application.keypair}",
+          :availability_zone => nil,
           :size => "#{Application.size}")
         begin
           item = instance#.instancesSet.item
@@ -31,8 +32,6 @@ module PoolParty
       end
       # Instance description
       def describe_instance(id)
-        # instance = ec2.describe_instances(:instance_id => id)
-        # item = instance.reservationSet.item.first.instancesSet.item.first
         EC2ResponseObject.get_hash_from_response(ec2.describe_instances(:instance_id => id))
       end
       # Get instance by id

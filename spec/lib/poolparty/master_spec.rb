@@ -45,6 +45,7 @@ describe "Master" do
     before(:each) do
       @master = Master.new
       @instance = RemoteInstance.new
+      @instance.stub!(:ip).and_return "127.0.0.1"
       @blk = Proc.new {puts "new"}
       Master.stub!(:new).once.and_return @master
     end
@@ -405,37 +406,34 @@ describe "Master" do
             File.should_receive(:copy).exactly(3).times.and_return true
             @master.copy_config_files_in_directory_to_tmp_dir("config/resource.d")
           end
-          it "should copy all the resource.d files from the monit directory to the tmp directory" do
-            @master.stub!(:copy_config_files_in_directory_to_tmp_dir).with("config/resource.d").and_return true
-            # @master.should_receive(:copy_config_files_in_directory_to_tmp_dir).at_least(1).with("config/monit.d").and_return true
-            @master.build_and_send_config_files_in_temp_directory
-          end
-          it "should build the authkeys file for haproxy" do
-            @master.should_receive(:build_and_copy_heartbeat_authkeys_file).and_return true
-            @master.build_and_send_config_files_in_temp_directory
-          end
-          it "should build the haproxy configuration file" do
-            @master.should_receive(:build_haproxy_file).and_return true
-            @master.build_and_send_config_files_in_temp_directory
-          end
-          it "should build the hosts file for nodes" do
-            @master.should_receive(:build_hosts_file_for).at_least(1).and_return true
-            @master.build_and_send_config_files_in_temp_directory
-          end
-          it "should build the ssh reconfigure script" do
-            @master.should_receive(:build_reconfigure_instances_script_for).at_least(1).and_return ""
-            @master.build_and_send_config_files_in_temp_directory
-          end
-          it "should be able to build the hosts file for the nodes" do
-            @master.build_and_send_config_files_in_temp_directory
-          end
-          it "should build global files" do
-            Master.should_receive(:build_user_global_files).once
-            @master.build_and_send_config_files_in_temp_directory
-          end
-          it "should build user node files" do
-            Master.should_receive(:build_user_node_files_for).at_least(1)
-            @master.build_and_send_config_files_in_temp_directory
+          describe "building" do
+            it "should copy all the resource.d files from the monit directory to the tmp directory" do
+              @master.should_receive_at_least_once(:copy_config_files_in_directory_to_tmp_dir).with("config/resource.d").and_return true
+            end
+            it "should build the authkeys file for haproxy" do
+              @master.should_receive(:build_and_copy_heartbeat_authkeys_file).and_return true              
+            end
+            it "should build the haproxy configuration file" do
+              @master.should_receive(:build_haproxy_file).and_return true
+            end
+            it "should build the nodes list file" do
+              @master.should_receive(:build_nodes_list).and_return true            
+            end
+            it "should build the hosts file for nodes" do
+              @master.should_receive(:build_hosts_file_for).at_least(1).and_return true
+            end
+            it "should build the ssh reconfigure script" do
+              @master.should_receive(:build_reconfigure_instances_script_for).at_least(1).and_return ""
+            end
+            it "should build global files" do
+              Master.should_receive(:build_user_global_files).once
+            end
+            it "should build user node files" do
+              Master.should_receive(:build_user_node_files_for).at_least(1)
+            end
+            after(:each) do
+              @master.build_and_send_config_files_in_temp_directory
+            end
           end
           describe "when the cloud requires heartbeat" do
             before(:each) do

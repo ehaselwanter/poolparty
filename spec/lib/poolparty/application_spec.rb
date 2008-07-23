@@ -4,6 +4,7 @@ describe "Application" do
   before(:each) do
     stub_option_load
     Application.reset!
+    Application.stub!(:keypair).and_return("testappkeypair")
   end
   describe "command line options" do
     it "should destroy the default options with the commandline options" do
@@ -54,11 +55,9 @@ describe "Application" do
   describe "User data" do
     before(:each) do
       @str = ":access_key: 3.14159\n:secret_access_key: pi"
-      Application.options = nil      
+      Application.options = nil
       Application.stub!(:open).with("http://169.254.169.254/latest/user-data").and_return(@str)
       @str.stub!(:read).and_return ":access_key: 3.14159\n:secret_access_key: pi"
-      # Application.default_options.stub!(:merge!).with({})                                                                                                                                                                                   
-      # Application.default_options.stub!(:merge!).with({:access_key => 3.14159, :secret_access_key => "pi"})
     end
     describe "added data keypair_path" do
       before(:each) do
@@ -84,7 +83,7 @@ describe "Application" do
     end
     it "should overwrite the default_options when passing in to the instance data" do      
       Application.stub!(:default_options).and_return({:access_key => 42})
-      Application.local_user_data      
+      # Application.local_user_data
       Application.options.access_key.should == 3.14159
     end
   end

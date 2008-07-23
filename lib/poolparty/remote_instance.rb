@@ -79,7 +79,8 @@ module PoolParty
         :configure_resource_d => configure_resource_d,
         :configure_haproxy => setup_haproxy,
         :configure_heartbeat => configure_heartbeat,
-        :user_tasks => user_tasks
+        :user_tasks => user_tasks,
+        :node_list => move_node_list
       }#.map {|k,v| {k.to_sym => v.nice_runnable(quiet)} }.inject({}) {|a,s| s.merge(a) }
     end
     def user_tasks
@@ -166,7 +167,18 @@ module PoolParty
           mkdir -p /data && /usr/bin/s3fs #{Application.shared_bucket} -o accessKeyId=#{Application.access_key} -o secretAccessKey=#{Application.secret_access_key} -o nonempty /data
         EOC
       end
-    end        
+    end
+    def move_node_list
+      <<-EOC
+        #{if_exists node_list_name, "mv #{remote_base_tmp_dir}/nodes.lst ~/.#{node_list_name}"}
+      EOC
+    end
+    def node_list_name
+      self.class.node_list_name
+    end
+    def self.node_list_name
+      "nodes.lst"
+    end
     # Installs with one commandline and an scp, rather than 10
     def install
     end

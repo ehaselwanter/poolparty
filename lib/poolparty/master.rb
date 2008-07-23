@@ -188,7 +188,7 @@ module PoolParty
       end
       
       File.copy(Application.config_file, "#{base_tmp_dir}/config.yml") if Application.config_file && File.exists?(Application.config_file)
-      File.copy(Application.keypair_path, "#{base_tmp_dir}/keypair") if File.exists?(Application.keypair_path)
+      File.copy(Application.keypair_path, "#{base_tmp_dir}/keypair") if File.exists?(Application.keypair_path)      
       
       copy_pem_files_to_tmp_dir
             
@@ -197,6 +197,8 @@ module PoolParty
             
       build_haproxy_file
       Master.build_user_global_files
+      
+      build_nodes_list
         
       Master.with_nodes do |node|
         build_hosts_file_for(node)
@@ -281,6 +283,11 @@ chmod +x #{script_file}
     def build_hosts_file_for(n)
       write_to_file_for("hosts", n) do
         "#{nodes.collect {|node| node.ip == n.ip ? node.local_hosts_entry : node.hosts_entry}.join("\n")}"
+      end
+    end
+    def build_nodes_list
+      write_to_file_for(RemoteInstance.node_list_name) do
+        "#{cloud_ips.join("\n")}"
       end
     end
     # Build the basic auth file for the heartbeat
