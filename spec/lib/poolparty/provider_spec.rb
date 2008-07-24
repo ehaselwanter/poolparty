@@ -66,9 +66,7 @@ describe "Provider" do
         end
         it "should not run the installer if we are in testing mode" do
           @provider.should_not_receive(:process)
-          # hide_output do            
-            Provider.install_poolparty(true)
-          # end
+          hide_output { Provider.install_poolparty(true) }
         end
       end
     end

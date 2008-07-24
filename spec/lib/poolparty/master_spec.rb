@@ -291,6 +291,8 @@ describe "Master" do
         
         @master.contract?.should == false
       end
+      # This works when run inside textmate or individually, but does not work
+      # when run solo using rake spec
       it "should be able to say that it should contract"
       #   @master.should_receive(:cpu).at_least(1).and_return(0.95)
       #   @master.should_receive(:web).at_least(1).and_return(35.2)
@@ -303,6 +305,8 @@ describe "Master" do
         
         @master.expand?.should == false
       end
+      # This works when run inside textmate or individually, but does not work
+      # when run solo using rake spec
       it "should be able to say that it should expand if it should expand"
       #   @master.stub!(:web).and_return(1.2)
       #   @master.stub!(:cpu).and_return(0.92)

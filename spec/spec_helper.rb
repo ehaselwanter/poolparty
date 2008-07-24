@@ -35,10 +35,14 @@ def stub_option_load
 end
 
 def hide_output
-  old_stdout = $stdout
-  $stdout.reopen(File.open((PLATFORM =~ /mswin/ ? "NUL" : "/dev/null"), 'w'))
-  yield if block_given?
-  $stdout = old_stdout
+  begin
+    stdout_sv = STDOUT.dup
+    STDOUT.reopen(File.open((PLATFORM =~ /mswin/ ? "NUL" : "/dev/null"), 'w'))
+    yield if block_given?
+  ensure
+    STDOUT.flush
+    STDOUT.reopen(stdout_sv)
+  end
 end
 
 def wait_launch(time=5)
