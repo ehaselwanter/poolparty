@@ -1,18 +1,43 @@
 =begin rdoc
   Application
-  This handles user interaction
+  This handles user interaction, loading the parameters, etc.
 =end
 module PoolParty
   class Application
     class << self
       attr_accessor :verbose, :options
       
-      # The application options
+      # The application options.
+      # If the options don't exist, use make_options to create them
       def options(opts={})
         @options ||= make_options(opts)        
       end
       # Make the options with the config_file overrides included
       # Default config file assumed to be at config/config.yml
+      # make_options handles loading the options for the entire application
+      # This allows you to add options at the commandline to control your pool
+      #   For instance
+      #     pool -v -i -n 1 -o4567 start
+      # 
+      # It loads the options in the configuration file next
+      # The configuration file is loaded
+      # By placing a config file in the file config/config.yml (can be changed via the command-line)
+      # make_options will load the config file, parse it and merge it with
+      # the rest of the command line options.
+      # Example configuration file:
+      # config/config.yml
+      # 
+      # :app_name: My Pool
+      # :minimum_instances: 2
+      # :maximum_instances: 100
+      # :keypair: my_keypair
+      # 
+      # It will then look in the user-data to see if any data is being
+      # stored there and merge those with the default options. This is
+      # especially useful when working on a remote instance, but not so
+      # useful when running on a development machine.
+      # 
+      # Finally, it returns an OpenStruct with the options
       def make_options(opts={})
         loading_options = opts.delete(:optsparse) || {}
         loading_options.merge!( opts || {})

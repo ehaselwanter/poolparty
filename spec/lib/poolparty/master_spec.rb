@@ -462,7 +462,7 @@ describe "Master" do
           end
           it "should be able to add a node file to the array" do
             Master.define_node_user_file(:box) {|a| "#{a}.box"}
-            Master.user_node_files.size.should == 1          
+            Master.user_node_files.size.should == 1
           end
           it "should write_to_file_for for each of the global_user_files" do
             Master.should_receive(:write_to_file_for).once.and_return true
