@@ -36,12 +36,12 @@ end
 
 def hide_output
   begin
-    stdout_sv = STDOUT.dup
+    old_stdout = STDOUT.dup
     STDOUT.reopen(File.open((PLATFORM =~ /mswin/ ? "NUL" : "/dev/null"), 'w'))
     yield if block_given?
   ensure
     STDOUT.flush
-    STDOUT.reopen(stdout_sv)
+    STDOUT.reopen(old_stdout)
   end
 end
 
