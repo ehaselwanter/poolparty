@@ -3,7 +3,9 @@
 =end
 require "enumerator"
 class Array
-  # Collection with the index
+  def to_os
+    map {|a| a.to_os }
+  end
   def collect_with_index &block
     self.enum_for(:each_with_index).collect &block
   end

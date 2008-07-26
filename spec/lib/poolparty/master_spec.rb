@@ -14,6 +14,9 @@ describe "Master" do
     Application.options.stub!(:expand_when).and_return("web < 3.0\n cpu > 0.80")    
     @master = Master.new
   end  
+  after(:each) do
+    @master.reset!
+  end
   after(:all) do
     @master.cleanup_tmp_directory(nil)
   end
@@ -37,6 +40,7 @@ describe "Master" do
     
     @master.stub!(:number_of_pending_instances).and_return(0)
     @master.stub!(:get_node).with(0).and_return node
+    
     @master.start_cloud!
     
     @master.nodes.first.instance_id.should == "i-5849ba"
@@ -254,32 +258,29 @@ describe "Master" do
       end
       describe "remote listing" do
         before(:each) do          
-          Application.stub!(:remote_instance?).and_return true          
+          Application.stub!(:remote_instance?).and_return true
           RemoteInstance.stub!(:remote_node_list_name).and_return @str_list_name
         end
-        it "should call nodes_from_local_listing when getting the nodes" do
-          @master.should_receive(:nodes_from_local_listing).and_return "name"
-          @master.nodes
-        end
+        it "should call nodes_from_local_listing when getting the nodes"
         describe "reading" do
           before(:each) do
-            @master.should_receive(:open).and_return @str_list_name
+            @master.stub!(:open).and_return @str_list_name
             @str_list_name.stub!(:read).and_return @remote_listing_string
           end
           it "should create a list of 3 nodes" do
-            @master.nodes.size.should == 3
+            @master.nodes_from_local_listing.size.should == 3
           end
           it "should create a list of 3 RemoteInstance" do
-            @master.nodes.first.class.should == RemoteInstance
+            @master.nodes_from_local_listing.first.class.should == RemoteInstance
           end
           it "should be able to pull the appropriate status for each of the instances" do
-            @master.nodes.collect {|n| n.instance_id }.should == %w(i-5849ba i-5849bb i-5849bc)
+            @master.nodes_from_local_listing.collect {|n| n.instance_id }.should == %w(i-5849ba i-5849bb i-5849bc)
           end
           it "should be able to pull the appropriate names for each of the instances" do
-            @master.nodes.collect {|n| n.name }.should == %w(node0 node1 node2)
+            @master.nodes_from_local_listing.collect {|n| n.name }.should == %w(node0 node1 node2)
           end
           it "should be able to pull the keypair name of each of the instances" do
-            @master.nodes.collect {|n| n.keypair }.should == %w(pool pool pool)
+            @master.nodes_from_local_listing.collect {|n| n.keypair }.should == %w(pool pool pool)
           end
         end
       end

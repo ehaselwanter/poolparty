@@ -3,8 +3,10 @@ require File.dirname(__FILE__) + '/../../spec_helper'
 describe "Application" do
   before(:each) do
     stub_option_load
-    Application.reset!
     Application.stub!(:keypair).and_return("testappkeypair")
+  end
+  after(:each) do
+    Application.reset!
   end
   describe "command line options" do
     it "should destroy the default options with the commandline options" do

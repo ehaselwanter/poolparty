@@ -54,7 +54,7 @@ module PoolParty
         end
         # We want the command-line to overwrite the config file
         default_options.merge!(local_user_data) unless local_user_data.nil?
-        OpenStruct.new(default_options)
+        MyOpenStruct.new(default_options)
       end
 
       # Load options via commandline
@@ -161,22 +161,24 @@ module PoolParty
           :keypair_path => "/mnt"
         }
       end
-      def local_user_data 
-        @local_user_data ||= begin
-          @@timer.timeout(2.seconds) do
-            YAML.load(open("http://169.254.169.254/latest/user-data").read)
-          end
-        rescue Exception => e
-          {}
+      def local_user_data
+        # Signal.trap(SIG_ALRM, "IGNORE")
+        begin
+          Timeout::timeout(2.seconds) do
+            require "open-uri"
+            @local_user_data ||= YAML.load(open("http://169.254.169.254/latest/user-data").read)
+          end  
+        rescue Timeout::Error => e
+          @local_user_data = {}
         end
+        @local_user_data
       end
       def remote_instance?
         options._remote_instance == true
       end
       # For testing purposes
       def reset!
-        @options = nil
-        @local_user_data = nil
+        @options = @local_user_data = nil
       end
       # Keypair path
       # Idiom:

@@ -343,7 +343,7 @@ chmod +x #{script_file}
     end
     # Return a list of the nodes and cache them
     def nodes
-      @nodes ||= Application.remote_instance? ? nodes_from_local_listing : nodes_from_remote_listing
+      @nodes ||= nodes_from_remote_listing#(Application._remote_instance ? nodes_from_local_listing : nodes_from_remote_listing)
     end
     def nodes_from_local_listing
       open(RemoteInstance.remote_node_list_name).read.collect_each_line_with_index do |line, index|
