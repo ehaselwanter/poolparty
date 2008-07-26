@@ -7,9 +7,7 @@ describe "Master" do
     Kernel.stub!(:system).and_return true
     Kernel.stub!(:exec).and_return true
     Kernel.stub!(:sleep).and_return true # WHy wait?, just do it
-    
-    Application.options
-    
+        
     Application.options.stub!(:contract_when).and_return("web > 30.0\n cpu > 0.80")
     Application.options.stub!(:expand_when).and_return("web < 3.0\n cpu > 0.80")    
     @master = Master.new

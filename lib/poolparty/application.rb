@@ -2,6 +2,7 @@
   Application
   This handles user interaction, loading the parameters, etc.
 =end
+require "open-uri"
 module PoolParty
   class Application
     class << self
@@ -163,13 +164,14 @@ module PoolParty
       end
       def local_user_data
         # Signal.trap(SIG_ALRM, "IGNORE")
-        begin
-          Timeout::timeout(2.seconds) do
-            require "open-uri"
-            @local_user_data ||= YAML.load(open("http://169.254.169.254/latest/user-data").read)
-          end  
-        rescue Timeout::Error => e
-          @local_user_data = {}
+        Timeout::timeout(2.seconds) do
+          @local_user_data ||= begin
+            YAML.load(open("http://169.254.169.254/latest/user-data").read)
+          rescue => e
+            {}
+          rescue Timeout::Error => e
+            {}
+          end            
         end
         @local_user_data
       end

@@ -17,7 +17,7 @@ rescue LoadError
 end
 require "pp"
 require "tempfile"
-
+require "open-uri"
 begin
   require 'fastthread'
   require 'system_timer'
