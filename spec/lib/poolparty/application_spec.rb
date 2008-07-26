@@ -58,6 +58,7 @@ describe "Application" do
       Application.options = nil
       Application.stub!(:open).with("http://169.254.169.254/latest/user-data").and_return(@str)
       @str.stub!(:read).and_return ":access_key: 3.14159\n:secret_access_key: pi"
+      @launch_hash = {:_remote_instance => true, :access_key=>3.14159, :keypair_path=>"/mnt", :keypair=>"testappkeypair", :secret_access_key=>"pi", :user_data=>"", :polling_time=>"30.seconds"}
     end
     describe "added data keypair_path" do
       before(:each) do
@@ -92,10 +93,20 @@ describe "Application" do
       Application.options.access_key.should == 3.14159
     end
     it "should have the required lauching hash" do
-      Application.hash_to_launch_with.should == {:access_key=>3.14159, :keypair_path=>"/mnt", :keypair=>"testappkeypair", :secret_access_key=>"pi", :user_data=>"", :polling_time=>"30.seconds"}      
+      Application.hash_to_launch_with.should == @launch_hash
     end
     it "should create the hash_to_launch_with a YAML string" do
       Application.launching_user_data.should == Application.hash_to_launch_with.to_yaml
+    end
+    describe "_remote_instance option" do
+      it "should say that the instance is not a remote instance by default" do
+        Application.stub!(:local_user_data).and_return nil
+        Application.remote_instance?.should == false
+      end
+      it "should be a remote instance when the local_user_data is true" do
+        Application.stub!(:local_user_data).and_return @launch_hash
+        Application.remote_instance?.should == true
+      end
     end
   end
   it "should parse and use a config file if it is given for the options" do

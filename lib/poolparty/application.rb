@@ -53,7 +53,7 @@ module PoolParty
           default_options.merge!( YAML.load(filedata) ) if filedata rescue ""
         end
         # We want the command-line to overwrite the config file
-        default_options.merge!(local_user_data) unless local_user_data.nil?        
+        default_options.merge!(local_user_data) unless local_user_data.nil?
         OpenStruct.new(default_options)
       end
 
@@ -139,7 +139,8 @@ module PoolParty
           :os => "ubuntu",
           :plugin_dir => "plugins",
           :install_on_load => false,
-          :working_directory => Dir.pwd
+          :working_directory => Dir.pwd,
+          :_remote_instance => false
         }
       end
       # Services monitored by Heartbeat
@@ -156,6 +157,7 @@ module PoolParty
           :secret_access_key => secret_access_key,
           :user_data => user_data,
           :keypair => keypair,
+          :_remote_instance => true,
           :keypair_path => "/mnt"
         }
       end
@@ -167,6 +169,9 @@ module PoolParty
         rescue Exception => e
           {}
         end
+      end
+      def remote_instance?
+        options._remote_instance == true
       end
       # For testing purposes
       def reset!

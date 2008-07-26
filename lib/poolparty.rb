@@ -77,12 +77,11 @@ module PoolParty
   def user_dir
     Application.working_directory
   end
-  # Write string to a tempfile
-  def write_to_temp_file(str="")
-    tempfile = Tempfile.new("rand#{rand(1000)}-#{rand(1000)}")
-    tempfile.print(str)
-    tempfile.flush
-    tempfile
+  def base_tmp_dir
+    File.join(Application.options.user_dir, "tmp")
+  end
+  def remote_base_tmp_dir
+    "~/tmp"
   end
   def register_monitor(*names)
     names.each do |name|

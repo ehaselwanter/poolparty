@@ -27,6 +27,11 @@ class String
   def classify
     self.capitalize
   end
+  def collect_each_line_with_index(&block)
+    returning [] do |arr|
+      arr << self.split(/\n/).collect_with_index(&block)
+    end.flatten
+  end
   def bucket_objects
     AWS::S3::Bucket.objects(self)
   end

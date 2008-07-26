@@ -187,17 +187,16 @@ module PoolParty
         File.copy(get_config_file_for("heartbeat.conf"), "#{base_tmp_dir}/ha.cf")
       end
       
-      File.copy(Application.config_file, "#{base_tmp_dir}/config.yml") if Application.config_file && File.exists?(Application.config_file)
+      # File.copy(Application.config_file, "#{base_tmp_dir}/config.yml") if Application.config_file && File.exists?(Application.config_file)
       File.copy(Application.keypair_path, "#{base_tmp_dir}/keypair") if File.exists?(Application.keypair_path)      
       
-      copy_pem_files_to_tmp_dir
+      # copy_pem_files_to_tmp_dir
             
       copy_config_files_in_directory_to_tmp_dir("config/resource.d")
       # copy_config_files_in_directory_to_tmp_dir("config/monit.d")
             
       build_haproxy_file
-      Master.build_user_global_files
-      
+      Master.build_user_global_files      
       build_nodes_list
         
       Master.with_nodes do |node|
@@ -211,15 +210,15 @@ module PoolParty
         end
       end
     end
-    def copy_pem_files_to_tmp_dir
-      %w(EC2_CERT EC2_PRIVATE_KEY).each do |key|
-        begin
-          file = `echo $#{key}`.strip
-          File.copy(file, "#{base_tmp_dir}/#{File.basename(file)}")
-        rescue Exception => e
-        end
-      end
-    end
+    # def copy_pem_files_to_tmp_dir
+    #   %w(EC2_CERT EC2_PRIVATE_KEY).each do |key|
+    #     begin
+    #       file = `echo $#{key}`.strip
+    #       File.copy(file, "#{base_tmp_dir}/#{File.basename(file)}")
+    #     rescue Exception => e
+    #     end
+    #   end
+    # end
     def cleanup_tmp_directory(c)
       Dir["#{base_tmp_dir}/*"].each {|f| FileUtils.rm_rf f} if File.directory?("tmp/")
     end
@@ -287,7 +286,11 @@ chmod +x #{script_file}
     end
     def build_nodes_list
       write_to_file_for(RemoteInstance.node_list_name) do
-        "#{cloud_ips.join("\n")}"
+        returning [] do |arr|
+          nodes.each do |node|
+            arr << "#{node.name}\t#{node.instance_id}\t#{node.number}\t#{node.status}\t#{node.launching_time}\t#{node.keypair}"
+          end
+        end.join("\n")
       end
     end
     # Build the basic auth file for the heartbeat
@@ -340,7 +343,22 @@ chmod +x #{script_file}
     end
     # Return a list of the nodes and cache them
     def nodes
-      @nodes ||= list_of_nonterminated_instances.collect_with_index do |inst, i|
+      @nodes ||= Application.remote_instance? ? nodes_from_local_listing : nodes_from_remote_listing
+    end
+    def nodes_from_local_listing
+      open(RemoteInstance.remote_node_list_name).read.collect_each_line_with_index do |line, index|
+        name,i_id,num,status,date,keypair = line.split(/\t/)
+        RemoteInstance.new({
+          :number => index, 
+          :instance_id => i_id,
+          :status => status,
+          :launching_time => date,
+          :keypair => keypair
+        })
+      end
+    end
+    def nodes_from_remote_listing
+      list_of_nonterminated_instances.collect_with_index do |inst, i|
         RemoteInstance.new(inst.merge({:number => i}))
       end
     end
@@ -466,6 +484,11 @@ chmod +x #{script_file}
       end
       
       # Placeholders
+      def build_send_files
+        global_send_files.each do |fname|
+          
+        end
+      end
       def build_user_global_files
         global_user_files.each do |arr|
           write_to_file_for(arr[0]) &arr[1]

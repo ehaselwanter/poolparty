@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/../../spec_helper'
 class TestClass
   include FileWriter
 end
-describe "FileWriter" do  
+describe "FileWriter" do
   before(:each) do
     # Application.reset!
     @instance = RemoteInstance.new

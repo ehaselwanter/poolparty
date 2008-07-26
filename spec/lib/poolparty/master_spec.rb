@@ -242,6 +242,48 @@ describe "Master" do
         end
       end
     end
+    describe "listing management" do
+      before(:each) do
+        @str_list_name = "name"        
+        RemoteInstance.stub!(:remote_node_list_name).and_return @str_list_name
+        @master.stub!(:open).and_return @str_list_name
+                  
+        @remote_listing_string = "node0	i-5849ba	0	running	Fri Jul 25 17:39:45 -0700 2008	pool
+        node1	i-5849bb	1	running	Fri Jul 25 17:39:45 -0700 2008	pool
+        node2	i-5849bc	2	pending	Fri Jul 25 17:39:45 -0700 2008	pool"
+      end
+      describe "remote listing" do
+        before(:each) do          
+          Application.stub!(:remote_instance?).and_return true          
+          RemoteInstance.stub!(:remote_node_list_name).and_return @str_list_name
+        end
+        it "should call nodes_from_local_listing when getting the nodes" do
+          @master.should_receive(:nodes_from_local_listing).and_return "name"
+          @master.nodes
+        end
+        describe "reading" do
+          before(:each) do
+            @master.should_receive(:open).and_return @str_list_name
+            @str_list_name.stub!(:read).and_return @remote_listing_string
+          end
+          it "should create a list of 3 nodes" do
+            @master.nodes.size.should == 3
+          end
+          it "should create a list of 3 RemoteInstance" do
+            @master.nodes.first.class.should == RemoteInstance
+          end
+          it "should be able to pull the appropriate status for each of the instances" do
+            @master.nodes.collect {|n| n.instance_id }.should == %w(i-5849ba i-5849bb i-5849bc)
+          end
+          it "should be able to pull the appropriate names for each of the instances" do
+            @master.nodes.collect {|n| n.name }.should == %w(node0 node1 node2)
+          end
+          it "should be able to pull the keypair name of each of the instances" do
+            @master.nodes.collect {|n| n.keypair }.should == %w(pool pool pool)
+          end
+        end
+      end
+    end
     describe "displaying" do
       it "should be able to list the cloud instances" do
         @master.list.should =~ /CLOUD \(/
@@ -362,10 +404,6 @@ describe "Master" do
           Kernel.should_receive(:system).with("tar -czf #{@master.base_tmp_dir}/plugins.tar.gz #{File.basename(Application.plugin_dir)}").and_return true
           @master.build_and_send_config_files_in_temp_directory
         end
-        it "should try to copy the pem files" do
-          @master.should_receive(:copy_pem_files_to_tmp_dir).and_return true
-          @master.build_and_send_config_files_in_temp_directory
-        end
         it "should try to copy the cert file"
         it "should try the copy the pk file"
         describe "get configs" do
@@ -381,12 +419,6 @@ describe "Master" do
             File.should_receive(:exists?).with("#{@master.user_dir}/config/config.yml").and_return false
             @master.get_config_file_for("config.yml").should == "root/config/config.yml"
           end
-        end
-        it "should copy the config file if it exists" do
-          Application.stub!(:config_file).and_return "config.yml"
-          File.stub!(:exists?).and_return true        
-          File.should_receive(:copy).at_least(2).times.and_return true
-          @master.build_and_send_config_files_in_temp_directory
         end
         describe "with copy_config_files_in_directory_to_tmp_dir method" do
           before(:each) do

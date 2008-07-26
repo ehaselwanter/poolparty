@@ -20,14 +20,7 @@ module PoolParty
         fp.flush
         block.call(fp)
       end
-    end
-    
-    def base_tmp_dir
-      File.join(user_dir, "tmp")
-    end
-    def remote_base_tmp_dir
-      "~/tmp"
-    end
+    end    
     def make_base_directory
       `mkdir -p #{base_tmp_dir}` unless File.directory?(base_tmp_dir)
     end

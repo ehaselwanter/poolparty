@@ -14,8 +14,7 @@ module PoolParty
     after :install, :mark_installed
     after :configure, :associate_public_ip
     def initialize(obj={})
-      super
-      
+      super      
       @ip = obj[:ip]
       @instance_id = obj[:instance_id]      
       @name = obj[:name] || "node"
@@ -178,6 +177,12 @@ module PoolParty
     end
     def self.node_list_name
       "nodes.lst"
+    end
+    def remote_node_list_name
+      self.class.remote_node_list_name
+    end
+    def self.remote_node_list_name
+      "#{remote_base_tmp_dir}/.#{node_list_name}"
     end
     # Installs with one commandline and an scp, rather than 10
     def install

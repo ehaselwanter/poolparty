@@ -25,4 +25,14 @@ listen web_proxy 127.0.0.1:3000
       EOO
     end
   end
+  describe "collect_each_line_with_index" do
+    before(:each) do
+      @longer_string = "hot\npotato\nthrough\nthe\nwindow"
+    end
+    it "should run the same code on the entire string" do
+      @longer_string.collect_each_line_with_index do |str, index|
+        "#{index}_#{str}"
+      end.should == ["0_hot", "1_potato", "2_through", "3_the", "4_window"]
+    end
+  end
 end
