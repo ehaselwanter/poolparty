@@ -20,10 +20,14 @@ require "tempfile"
 require "open-uri"
 begin
   require 'fastthread'
+rescue LoadError
+  require "thread"
+end
+
+begin  
   require 'system_timer'
   @@timer = SystemTimer
 rescue LoadError
-  require 'thread'
   require 'timeout'
   @@timer = Timeout
 end

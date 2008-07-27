@@ -55,7 +55,7 @@ module PoolParty
         end
         # We want the command-line to overwrite the config file
         default_options.merge!(local_user_data) unless local_user_data.nil?
-        MyOpenStruct.new(default_options)
+        default_options.to_os
       end
 
       # Load options via commandline
@@ -163,15 +163,16 @@ module PoolParty
         }
       end
       def local_user_data
-        # Signal.trap(SIG_ALRM, "IGNORE")
-        Timeout::timeout(2.seconds) do
-          @local_user_data ||= begin
-            YAML.load(open("http://169.254.169.254/latest/user-data").read)
-          rescue => e
-            {}
-          rescue Timeout::Error => e
-            {}
-          end            
+        # Signal.trap(SIG_ALRM, "IGNORE")        
+        @local_user_data ||=
+        begin
+          require 'open-uri'
+          @@timer::timeout(2.seconds) { @local_user_data ||= YAML.load(open("http://169.254.169.254/latest/user-data").read) }
+        rescue Timeout::Error => e
+          {}
+        rescue => e
+          puts "Error: #{e}"
+          {}
         end
         @local_user_data
       end
