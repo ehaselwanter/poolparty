@@ -16,10 +16,7 @@ module PoolParty
     # 
     # For example usage, see lib/poolparty/plugins/line.rb
     def define_resource(name, &block)
-      symc = "#{name}".camelcase
-      klass = symc.class_constant(PoolParty::Resources::CustomResource, {:preserve => true}, &block)
-      PoolParty::Resources.module_eval &block
-      klass
+      name.to_s.new_resource_class &block
     end
     
     # Allow us to create virtual resources
@@ -36,7 +33,7 @@ module PoolParty
     # Note that you can define any resources within the virtual resource
     # within the definition or the call.
     # Call example:
-    # has_virtualhost do        
+    # has_virtualhost do
     #  name "xnot.org"
     # end
     # 
@@ -44,17 +41,14 @@ module PoolParty
     # 
     # An example is included in the poolparty-apache-plugin
     def virtual_resource(name=:virtual_resource, opts={}, &block)
-      symc = "#{name}".camelcase
-      eval <<-EOE
-        class PoolParty::Resources::#{symc} < PoolParty::Resources::Resource
-        end
-      EOE
-      klass = "PoolParty::Resources::#{symc}".constantize
+      symc = "#{name}".top_level_class.camelcase
+      klass = symc.class_constant(PoolParty::Plugin::Plugin, {:preserve => true}, &block)
+      
+      PoolParty::Service.add_has_and_does_not_have_methods_for(symc)
+      
       klass.module_eval &block if block
-      klass.send :define_method, :virtual_resource?, Proc.new{true}
-      klass.send :define_method, :printable?, Proc.new{false}
       klass
     end
     
-  end  
+  end
 end

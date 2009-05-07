@@ -43,28 +43,18 @@ class String
     self.downcase.gsub(/[ ]/, '_')
   end
   def safe_quote
-    self.gsub(/[']/, '\\\\\'')
+    self.gsub(/['"]/, '\\\"')
+    # self.gsub(/["']/, "\\\"")
   end
   def nice_runnable(quite=true)
     self.split(/ && /).join("\n")
   end
-  # This is the method we use to turn the options into a string to build the main 
-  # manifests
-  def to_option_string(ns=[])
-    a_template = (self =~ /template/) == 0
-    a_service = self =~ /^[A-Z][a-zA-Z]*\[[a-zA-Z0-9\-\.\"\'_\$\{\}\/]*\]/
-    a_function = self =~/(.)*\((.)*\)(.)*/
-    if is_a?(PoolParty::Resources::Resource)
-      self.to_s
-    else
-      (a_service || a_template || a_function) ? self : "'#{self}'"
-    end    
-  end
+
   # Refactor this guy to get the class if the class is defined, and not always create a new one
   # although, it doesn't really matter as ruby will just reopen the class
   def class_constant(superclass=nil, opts={}, &block)
-    symc = ((opts && opts[:preserve]) ? ("#{self.camelcase}Classs") : "PoolParty#{self.camelcase}Classs").classify
-    
+    symc = ((opts && opts[:preserve]) ? ("#{self.camelcase}Class") : "PoolParty#{self.camelcase}Class").classify
+
     kla=<<-EOE
       class #{symc} #{"< #{superclass}" if superclass}
       end
@@ -75,6 +65,73 @@ class String
     klass.module_eval &block if block
     
     klass
+  end
+  
+  def new_resource_class(superclass=nil, opts={}, &block)
+    symc = "::PoolParty::Resources::#{self.camelcase}"
+    kla=<<-EOE
+      class #{symc} < ::PoolParty::Resources::Resource
+      end
+    EOE
+    
+    Kernel.module_eval kla
+    klass = symc.constantize
+    klass.module_eval &block if block
+
+    klass
+  end
+  
+  def camelcase
+    gsub(/(^|_|-)(.)/) { $2.upcase }
+  end
+  def camelize
+    camelcase
+  end
+  
+  # "FooBar".snake_case #=> "foo_bar"
+   def snake_case
+     gsub(/\B[A-Z]+/, '_\&').downcase
+   end
+   def underscore
+     snake_case
+   end
+   
+    # "FooBar".dasherize #=> "foo-bar"
+    def dasherize
+      gsub(/\B[A-Z]+/, '-\&').downcase
+    end
+    
+    def classify
+      self.sub(/.*\./, '').camelcase
+    end
+    
+    #TODO: implement here to drop activesupport
+    # # Form can be either :utc (default) or :local.
+    # def to_time(form = :utc)
+    #   ::Time.send("#{form}_time", *::Date._parse(self, false)(:year, :mon, :mday, :hour, :min, :sec).map { |arg| arg || 0 })
+    # end
+    
+    
+  # Constantize tries to find a declared constant with the name specified
+  # in the string. It raises a NameError when the name is not in CamelCase
+  # or is not initialized.
+  #
+  # Examples
+  #   "Module".constantize #=> Module
+  #   "Class".constantize #=> Class
+  def constantize(mod=Object)
+    camelcased_word = camelcase
+    begin
+      mod.module_eval(camelcased_word, __FILE__, __LINE__)
+    rescue NameError
+      puts "#{camelcased_word} is not defined."
+      nil
+    end
+  end
+  
+  def preserved_class_constant(append="")
+    klass = "#{self}#{append}".classify
+    Object.const_defined?(klass.to_sym) ? klass.to_s.constantize : nil
   end
   
   def module_constant(append="", &block)
@@ -94,4 +151,41 @@ class String
       arr << self.split(/\n/).collect_with_index(&block)
     end.flatten
   end
+  
+  # Read a new-line separated string and turn 
+  # the string from the form 
+  #   a = "b"
+  #   b = "c"
+  # into a hash
+  #  {:a => "b", :b => "c"}
+  def to_hash
+    split("\n").inject({}) do |sum,line| 
+      if line.include?("=")
+        l = line.split("=").map {|a| a.strip }
+        key = l[0].to_sym
+        value = l[1].gsub(/\"/, '')
+        sum.merge(key => value)
+      else
+        sum
+      end
+    end
+  end
+  
+  # Take a mac address and split it to map to the arp -a response
+  # Just rip off the first 0 if the first char is 0
+  def macify
+    split(":").map {|a| a[0].chr == "0" ? a[1].chr : a}.join(":")
+  end
+
+  ##
+  # @param o<String> The path component to join with the string.
+  #
+  # @return <String> The original path concatenated with o.
+  #
+  # @example
+  #   "merb"/"core_ext" #=> "merb/core_ext"
+  def /(o)
+    File.join(self, o.to_s)
+  end
+  
 end

@@ -5,16 +5,24 @@ require "poolpartycl"
 
 o = PoolParty::Optioner.new(ARGV) do |opts, optioner|
   opts.on('-n name', '--name name', 'Terminate the cloud of this name')    { |c| optioner.cloudname c }
+  opts.on('-y', '--yes', 'Terminate the cloud without prompt')    { optioner.yes true }
 end
 
-o.loaded_clouds.each do |cloud|
-  
-  with_cloud(cloud) do
+o.loaded_clouds.each do |cld|
+  cld.nodes(:status => "running").each do |inst|
+    msg = <<-EOM
+Shutting down #{inst.instance_id}
+Are you sure? (Y/N)
+    EOM
     
-    list_of_running_instances.each do |inst|
+    if o.yes?
       puts "Shutting down #{inst.instance_id}"
-      terminate_instance!(inst.instance_id)
+      cld.terminate_instance!(:instance_id => inst.instance_id)
+    else
+      if are_you_sure?(msg)
+        puts "Shutting down #{inst.instance_id}"
+        cld.terminate_instance!(:instance_id => inst.instance_id)
+      end
     end
-    
-  end    
+  end
 end

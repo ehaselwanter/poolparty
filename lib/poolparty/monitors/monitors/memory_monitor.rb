@@ -1,17 +1,19 @@
-module PoolParty
+# module PoolParty
   module Monitors
     
-    class MemoryMonitor < BaseMonitor
+    class Memory < BaseMonitor
       
-      def run
+      def get(data=nil)
         uname = %x[uname]
         case uname.chomp
         when "Darwin"
           darwin_memory_usage
         else
           nix_memory_usage
-        end                
+        end
       end
+      
+      private
       
       def darwin_memory_usage
         str = %x[vm_stat]
@@ -28,7 +30,7 @@ module PoolParty
           used_memory / total_memory
         rescue Exception => e
           0.0
-        end                 
+        end
       end
       
       def nix_memory_usage
@@ -42,9 +44,7 @@ module PoolParty
           0.0
         end
       end
-            
+
     end
-    
-    register_monitor :memory
   end
-end
+# end

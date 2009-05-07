@@ -3,7 +3,7 @@ module PoolParty
   
   # Load a file that contains a pool into memory
   def load_pool(filename=nil)
-    filename = Binary.get_existing_spec_location#Dir["#{Dir.pwd}/**/*.rb"].select {|f| ::File.basename(f) == "clouds.rb" }.first unless filename
+    filename = filename || Binary.get_existing_spec_location
     dputs "Using spec at #{filename}"
     
     unless filename && ::File.readable?(filename)
@@ -11,19 +11,22 @@ module PoolParty
       exit(1)
     else
       $pool_specfile = filename
-      PoolParty::Script.inflate(open(filename).read, filename)
+      PoolParty::Pool::Pool.load_from_file filename
     end
   end
   
-  def print_with_nice_printer(header=nil, strs=[])
-    returning NicePrinter.new do |printer|
-      printer.header
-      printer.center(header) if header
-      strs.each {|st| printer << st if st}
-      printer.footer
-    end.print
+  # Helper to print with the nice printer
+  def print_with_nice_printer(header=nil, strs=[], &block)
+    printer = NicePrinter.new
+    printer.header
+    printer.center(header) if header
+    yield(printer)
+    strs.each {|st| printer << st if st}
+    printer.footer
+    printer.print
   end
   
+  # Keep the pool_specfile 
   def pool_specfile
     $pool_specfile
   end
@@ -44,13 +47,14 @@ module PoolParty
       # These are the locations the spec file can be before the cloud
       # aborts because it cannot load the cloud
       def get_existing_spec_location
-        [
-            "#{Base.remote_storage_path}/#{Base.default_specfile_name}", 
-            "#{Base.default_specfile_name}",            
-            "#{Base.base_config_directory}/#{Base.default_specfile_name}",            
-            Dir["#{Dir.pwd}/*/clouds.rb"],
-            ENV["POOL_SPEC"],
-            "#{Base.storage_directory}/#{Base.default_specfile_name}"
+        [ 
+          "#{Dir.pwd}/#{Default.default_specfile_name}",
+          Dir["#{Dir.pwd}/*/#{Default.default_specfile_name}"],
+          "#{Default.remote_storage_path}/#{Default.default_specfile_name}", 
+          "#{Default.default_specfile_name}",            
+          "#{Default.base_config_directory}/#{Default.default_specfile_name}",
+          "#{Default.poolparty_home_path}/#{Default.default_specfile_name}",          
+          ENV["POOL_SPEC"]
         ].flatten.reject {|a| a.nil?}.reject do |f|
           f unless ::File.readable?(f)
         end.first

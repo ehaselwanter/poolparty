@@ -6,6 +6,9 @@ class Object
   def my_methods
     self.methods.sort - (self.class.methods + self.class.superclass.methods)
   end
+  def this
+    self
+  end
   def to_os
     self
   end  
@@ -13,8 +16,8 @@ class Object
     original = self.method(original_id).to_proc
     define_method(new_id){|*args| original.call(*args)}
   end
-  def with_options(opts={}, parent=self, &block)
-    @p = parent.clone
+  def with_options(opts={}, par=nil, &block)
+    @p = par.clone
     @p.options.merge!(opts)
     @p.instance_eval &block if block
   end  
@@ -31,17 +34,7 @@ class Object
       v
     else
       vs = v.to_s.to_sym
-      respond_to?(vs) ? self.send(vs, *args) : v rescue v
-    end
-  end
-  def to_option_string
-    case self.class
-    when String
-      self.to_option_string
-    when Array
-      self.each {|a| a.to_option_string }.join(" ")
-    else
-      "#{self}"
+      respond_to?(vs) ? self.send(vs, *args) : v rescue v  #NOTE MF: maybe we should not rescue all errors?
     end
   end
   def respec_string
@@ -72,22 +65,38 @@ class Object
   def meta_undef name
     meta_eval { remove_method name }
   end
-  def run_in_context(context=self, &block)
-    name="temp_#{self.class}_#{respond_to?(:parent) ? parent.to_s : Time.now.to_i}".to_sym
-    meta_def name, &block
-    self.send name, context
-    # self.instance_eval &block if block
-    meta_undef name rescue ""
-  end
+  # def run_in_context(context=self, &block)
+  #   name="temp_#{self.class}_#{respond_to?(:parent) ? parent.to_s : Time.now.to_i}".to_sym
+  #   meta_def name, &block
+  #   self.send name, context
+  #   meta_undef name rescue ""
+  # end
   def vputs(m="", o=self)
-    puts m if o.verbose rescue ""
+    # puts m if o.verbose rescue ""
+    puts "[INFO] -- #{m}" if verbose?
   end
   def vprint(m="", o=self)
     print m if o.verbose rescue ""
   end
   def dputs(m="", o=self)
-    puts m if o.debugging rescue ""
+    puts "[DEBUG] -- #{m.inspect}" if debugging?(o) rescue ""
   end
+  def dprint(m="", o=self)
+    print "#{m}" if debugging?(o) || verbose?(o) rescue ""
+  end
+  def verbose?(o=self)
+    o.respond_to?(:verbose) ? o.verbose : ($TESTING ||= false)
+  end
+  def debugging?(o=self)
+    o.respond_to?(:debug) ? o.debug : ($DEBUGGING ||= false)
+  end
+  def debugging(bool=nil)
+    bool.nil? ? $DEBUGGING : $DEBUGGING = bool
+  end
+  def testing(bool=$TESTING)
+    bool.nil? ? $TESTING : $TESTING = bool
+  end
+  alias :debug :debugging
   def unix_hide_string
     "2>&1 > /dev/null"
   end

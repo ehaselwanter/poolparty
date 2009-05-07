@@ -16,155 +16,152 @@
     register_remote_base :remote_base_name
   
 =end
+
 module PoolParty
 
-  def register_remote_base(*args)
-    args.each do |arg|
-      base_name = "#{arg}".downcase.to_sym
-      (remote_bases << base_name) unless remote_bases.include?(base_name)
-    end
-  end
-  
-  def remote_bases
-    $remote_bases ||= []
-  end
-
   module Remote    
-    # This class is the base class for all remote types
+    # This class is the base class for all remote types, such as ec2
     # Everything remoting-wise is derived from this class
-    module RemoterBaseMethods
+    class RemoterBase
+      include               Dslify
+      include  ::PoolParty::Remote
+      
+      attr_reader :cloud
+      
+      def initialize(prnt, opts={}, &block)
+        dsl_options prnt.options.merge(opts) if prnt && prnt.respond_to?(:options)
+        instance_eval &block if block
+        @cloud = prnt
+      end
+      
+      def self.inherited(arg)
+        base_name = "#{arg}".downcase.top_level_class.to_sym
+        (remote_bases << base_name) unless remote_bases.include?(base_name)
+      end
+
+      
+      # def method_missing(meth, *args, &block)
+      #   if @cloud
+      #     @cloud.send meth, *args, &block rescue super
+      #   else
+      #     super
+      #   end
+      # end
+      
       # Required methods
       # The next methods are required on all RemoteInstance types
       # If your RemoteInstance type does not overwrite the following methods
       # An exception will be raised and poolparty will explode into tiny little 
       # pieces. Don't forget to overwrite these methods
       # Launch a new instance
-      def launch_new_instance!
-        raise RemoteException.new(:method_not_defined, "launch_new_instance!")
+      def self.launch_new_instance!(cld, o={})
+        new(cld, o).launch_new_instance!(o)
       end
+      def launch_new_instance!(o={})
+        raise RemoteException.new(:method_not_defined, "launch_new_instance!")        
+      end
+      
       # Terminate an instance by id
-      def terminate_instance!(id=nil)
+      def self.terminate_instance!(cld, o={})
+        new(cld, o).terminate_instance!(o)
+      end
+      def terminate_instance!(o={})        
         raise RemoteException.new(:method_not_defined, "terminate_instance!")
       end
+      
       # Describe an instance's status
-      def describe_instance(id=nil)
+      def self.describe_instance(cld, o={})
+        new(cld, o).describe_instance(o) 
+      end
+      def describe_instance(o={})
         raise RemoteException.new(:method_not_defined, "describe_instance")
       end
+      
       # Get instances
       # The instances must have a status associated with them on the hash
-      def describe_instances
+      def self.describe_instances(cld, o={})
+        new(cld, o).describe_instances(o)
+      end
+      def describe_instances(o={})        
         raise RemoteException.new(:method_not_defined, "describe_instances")
       end
       
-    end
-    module RemoterBase
-      # The following methods are inherent on the RemoterBase
-      # If you need to overwrite these methods, do so with caution
-      # Listing methods
-      def list_of_running_instances(list = list_of_nonterminated_instances)
-        list.select {|a| a.running? }
-      end
-      # Get a list of the pending instances
-      def list_of_pending_instances(list = list_of_nonterminated_instances)
-        list.select {|a| a.pending? }
-      end
-      # list of shutting down instances
-      def list_of_terminating_instances(list = remote_instances_list)
-        list.reject {|i| true if !i.terminating? }
-      end
-      # Get the instances that are non-master instances
-      def nonmaster_nonterminated_instances(list = list_of_nonterminated_instances)
-        list_of_nonterminated_instances.reject {|i| i.master? }
-      end
-      # list all the nonterminated instances
-      def list_of_nonterminated_instances(list = remote_instances_list)
-        list.reject {|i| i.terminating? || i.terminated? }
-      end
-      # We'll stub the ip to be the master ip for ease and accessibility
-      def ip
-        master.ip
-      end
-      # get the master instance
-      def master
-        get_instance_by_number(0)
-      end
-      # Get instance by number
-      def get_instance_by_number(i=0, list = remote_instances_list)
-        name = ((i.nil? || i.zero?) ? "master" : "node#{i}")
-        list.select {|i| i.name == name }.first
-      end
-      # A callback before the configuration task takes place
-      def before_configuration_tasks        
-      end
-      def remote_instances_list        
-        @containing_cloud = self
-        # puts "> #{@containing_cloud} #{@describe_instances.nil?}"
-        list_of_instances(keypair).collect {|h| PoolParty::Remote::RemoteInstance.new(h, @containing_cloud) }
-      end
-      # List the instances for the current key pair, regardless of their states
-      # If no keypair is passed, select them all
-      def list_of_instances(keyp=nil)
-        tmp_key = (keyp ? keyp : nil)
+      # TODO: Rename and modularize the @inst.status =~ /pending/ so that it works on all 
+      # remoter_bases
+      def launch_instance!(o={}, &block)
+        @inst = launch_new_instance!( o )
+        sleep(2)
         
-        unless @describe_instances
-          tmpInstanceList = describe_instances.select {|a| a if (tmp_key.nil? || tmp_key.empty? ? true : a[:keypair] == tmp_key) }
-          has_master = !tmpInstanceList.select {|a| a[:name] == "master" }.empty?          
-          if has_master
-            @describe_instances = tmpInstanceList
-          else
-            @id = 0
-            running = select_from_instances_on_status(/running/, tmpInstanceList)
-            pending = select_from_instances_on_status(/pending/, tmpInstanceList)
-            terminated = select_from_instances_on_status(/shutting/, tmpInstanceList)
+        cloud.dputs "#{cloud.name} launched instance checking for ip..."
+        
+        # Wait for 10 minutes for the instance to gain an ip if it doesn't already have one
+        500.times do |i|
+          break if @inst[:ip] =~ /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/
+          sleep(2)
+          @inst = describe_instance(@inst)
+          cloud.dprint "."
+        end        
+        cloud.dputs "Found an ip"
+        cloud.dputs "#{@cloud.name} Launched instance #{@inst[:ip]}"
+        cloud.dputs "   waiting for it to respond"
+        
+        # Try for 10 minutes to pint port 22 
+        500.times do |i|
+          cloud.dprint "."
+          if ping_port(@inst[:ip], 22)
+            cloud.dputs ""
+            cloud.started_instance = @inst
             
-            running = running.map do |inst|
-              inst[:name] = (@id == 0 ? "master" : "node#{@id}")
-              @id += 1
-              inst
-            end.sort_by {|a| a[:index] }
+            cloud.call_after_launch_instance_callbacks(@inst)
+            block.call(@inst) if block
             
-            @describe_instances = [running, pending, terminated].flatten
+            return @inst
+          end
+          sleep(2)
+        end
+        raise "Instance not responding at #{inst.ip}"
+      end
+      
+      def self.launch_instance!(cld, o={}, &block)
+        new(cld, o, &block).launch_instance!
+      end
+
+      # Called after an instance is launched
+      def after_launch_instance(instance=nil)
+        puts "after_launch_instance in remoter_base"
+      end
+
+      #TODO: Remove
+      # def self.when_instance_is_responding(inst, &block)
+      #   if ping_port(inst.ip, 22)
+      #     block.call if block
+      #   else
+      #     raise "Instance not responding at #{inst.ip}"
+      #   end
+      # end
+      # def when_instance_is_responding(inst, &block);self.class.when_instance_is_responding;end
+      
+      # TODO: BAD FORM, already defined in connections.rb. Fix this, ASAP
+      def self.ping_port(host, port=22, retry_times=400)
+        connected = false
+        retry_times.times do |i|
+          begin
+            break if connected = TCPSocket.new(host, port).is_a?(TCPSocket)
+          rescue Exception => e
+            sleep(2)
           end
         end
-        @describe_instances
-      end
-      # Select the instances based on their status
-      def select_from_instances_on_status(status=/running/, list=[])
-        list.select {|a| a[:status] =~ status}
-      end
-      # Helpers
-      def create_keypair
-      end
-      # Reset the cache of descriptions
-      def reset_remoter_base!
-        @describe_instances = nil
-      end
-      def self.included(other)
-        # PoolParty.register_remote_base(self.class.to_s.downcase.to_sym)
+        connected
       end
       
-      # Callback after loaded
-      def loaded_remoter_base        
+      # After launch callback
+      # This is called after a new instance is launched
+      def after_launched(force=false)        
       end
       
-      # Custom minimum runnable options
-      # Extend the minimum runnable options that are necessary
-      # for poolparty to run on the remote base
-      def custom_minimum_runnable_options
-        []
-      end
-            
-      # Custom installation tasks
-      # Allow the remoter bases to attach their own tasks on the 
-      # installation process
-      def custom_install_tasks_for(a=nil)
-        []
-      end
-      # Custom configure tasks
-      # Allows the remoter bases to attach their own
-      # custom configuration tasks to the configuration process
-      def custom_configure_tasks_for(a=nil)
-        []
+      # Before shutdown callback
+      # This is called before the cloud is contracted
+      def before_shutdown
       end
       
     end
@@ -172,4 +169,6 @@ module PoolParty
   end
 end
 
-Dir["#{File.dirname(__FILE__)}/remote_bases/*.rb"].each {|base| require base }
+Dir["#{File.dirname(__FILE__)}/remoter/*.rb"].each do |remoter_module| 
+  require remoter_module
+end

@@ -1,9 +1,11 @@
-tmp/*
+rdoc/*
+.com.apple.timemachine.supported
+.DS_Store
 *tmp*
 pkg/*.tgz
+pkg/*.gem
 pkg/poolparty*/*
 .git/
-.gitignore
 log/
 log/*
 test_manifest.pp
@@ -11,3 +13,12 @@ test_manifest.pp
 *erl_crash.dump*
 log
 *.beam
+ri/
+doc/
+config/manifest.pp
+vendor/dependencies/cache
+vendor/dependencies/packages
+.autosession.vim
+tags
+.session
+clouds.rb

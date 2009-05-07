@@ -1,6 +1,8 @@
+$LOAD_PATH<< File.dirname(__FILE__)
 # Load required gems
+#TODO: remove activesupport
 @required_software = Array.new
-%w(rubygems activesupport ftools logging resolv ruby2ruby digest/sha2).each do |lib|
+%w(rubygems activesupport ftools logging resolv ruby2ruby digest/sha2 json pp).each do |lib|
   begin
     require lib
   rescue Exception => e
@@ -30,43 +32,93 @@ unless @required_software.empty?
   exit(0)
 end
 
-# Use active supports auto load mechanism
-ActiveSupport::Dependencies.load_paths << File.dirname(__FILE__)
-
-## Load PoolParty
-%w(version).each do |f|
-  require "#{File.dirname(__FILE__)}/poolparty/#{f}"
+Dir.glob(File.join(File.dirname(__FILE__),'..', 'vendor/gems/*/lib/*.rb')).each do |d|
+  require d
 end
 
-%w(core modules exceptions dependency_resolutions aska monitors provisioners server extra net).each do |dir|
-  Dir[File.dirname(__FILE__) + "/poolparty/#{dir}/**.rb"].each do |file|
-    require file
+t=Time.now
+## Load PoolParty
+module PoolParty
+end
+
+def PoolParty.require_directory(dir)
+  if ::File.file?(dir)
+    puts "#{::File.expand_path(dir)}" if $DEBUGGING || $GENERATING_MANIFEST
+    require dir
+  else
+    Dir["#{dir}/*.rb"].sort.each do |file|
+       puts "#{::File.expand_path(file)}" if $DEBUGGING || $GENERATING_MANIFEST
+       require "#{file}" if ::File.file?(file)
+    end
+    Dir["#{dir}/*"].sort.each do |dir|
+      require_directory(dir) if ::File.directory?(dir)
+    end
   end
 end
 
-Kernel.load_p File.dirname(__FILE__) + "/poolparty/poolparty"
-Logging.init :debug, :info, :warn, :error, :fatal
+#load poolparty framework in specific order
+$_poolparty_load_directories = [
+  "core",
+  "dependencies.rb",
+  "dependency_resolver/dependency_resolver_cloud_extensions.rb",
+  "dependency_resolver/dependency_resolver.rb",
+  "poolparty/poolparty_base_class.rb",
+  "poolparty/default.rb",
+  "modules",
+  "exceptions",
+  'poolparty/key.rb',
+  "dependency_resolver",
+  "aska.rb",
+  "config",
+  "monitors/monitor_rack",
+  "capistrano.rb",
+  'provisioners/provisioner_base.rb',
+  'provisioners/capistrano/capistrano.rb',
+  'provision',
+  "extra",
+  "net",
+  "helpers",
+  "verification",
+  "poolparty/resource.rb",
+  "poolparty/service.rb",
+  "resources",
+  "services",
+  "poolparty/cloud.rb",
+  "poolparty",
+  "templates"
+  ]
+manifest_file_location = ::File.join(::File.dirname(__FILE__), '../config/manifest.pp')
+
+if ::File.file?(manifest_file_location)
+  ::File.readlines(manifest_file_location).each do |line| 
+    dputs "#{::File.expand_path(line)}"
+    require "#{line.gsub(/\n/, '')}"
+  end
+else
+  $_poolparty_load_directories.each do |dir|
+    PoolParty.require_directory(::File.join(::File.dirname(__FILE__),'poolparty', dir))
+  end  
+end
+
+# Logging.init :debug, :info, :warn, :error, :fatal
 
 module PoolParty
   include FileWriter
   
   def log
-    @logger ||= make_new_logger
+    @logger ||= make_new_logger rescue STDOUT
   end
   def reset!
     $pools = $clouds = $plugins = @describe_instances = nil
-  end  
+  end
+  
   class PoolParty
-    def initialize(spec)
-      reset!
-      Script.inflate(spec) if spec
-    end
   end
   
   private
   #:nodoc:#
   def make_new_logger
-    FileUtils.mkdir_p ::File.dirname(Base.pool_logger_location) unless ::File.directory?(::File.dirname(Base.pool_logger_location))
+    FileUtils.mkdir_p ::File.dirname(Default.pool_logger_location) unless ::File.directory?(::File.dirname(Default.pool_logger_location))
     Loggable.new
   end
 end
@@ -80,16 +132,15 @@ class Object
 end
 
 class Class
-  include PoolParty::PluginModel  
+  include PoolParty::PluginModel
 end
 
 ## Load PoolParty Plugins and package
 module PoolParty
   %w(plugins base_packages).each do |dir|
-    Dir[::File.dirname(__FILE__) + "/poolparty/#{dir}/*.rb"].each do |file|
-      require file
-    end
+    require_directory(::File.join(::File.dirname(__FILE__), 'poolparty', dir))
   end
 end
 
 PoolParty.reset!
+dputs "duration = #{Time.now-t}"

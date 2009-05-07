@@ -1,18 +1,31 @@
 #!/usr/bin/env ruby
 $:.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
-require "poolparty"
-require "poolpartycl"
+require "poolparty/lite"
 
-o = PoolParty::Optioner.new(ARGV) do |opts, optioner|
-  opts.on('-c name', '--class name', 'Listing for cloud class (valid args: [name|ip])')    { |t| optioner.classname t }
-  opts.on('-n name', '--name name', 'Listing for cloud name')    { |c| optioner.cloudname c }
+list_type = ARGV.shift || "ip"
+
+json_file = ARGV[0] || PoolParty::Default.properties_hash_file
+raise "ERROR: no json_file given" if !json_file
+schema = PoolParty::Schema.new( ::File.read(json_file) )
+
+inst_array = PoolParty::Neighborhoods.load_default.instances.instances
+
+if !inst_array || inst_array.empty?
+  remoter_base = schema.options.remote_base
+  remote_base = remoter_base.top_level_class.constantize(PoolParty::Remote)
+
+  instances = remote_base.send :describe_instances, schema.options
+  inst_array = instances.map {|inst| inst.send list_type.to_sym }  
 end
 
-@ctype = (o.classname || "name").downcase.to_sym
-
-o.loaded_clouds.each do |cloud|
-  with_cloud(cloud, {:ctype => @ctype}) do
-    print "#{list_of_running_instances.collect{|a| "#{a.send ctype}" }.join("\t")}"
-  end  
-  
+print_array = 
+case list_type
+when "ip"
+  inst_array.compact.map {|i| i.ip }
+when "internal_ip"
+  inst_array.compact.map {|i| i.internal_ip || i.ip }
+else
+  inst_array
 end
+
+print print_array.compact.join("\t")

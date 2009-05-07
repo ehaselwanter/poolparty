@@ -4,13 +4,14 @@ require "poolparty"
 require "poolpartycl"
 
 o = PoolParty::Optioner.new(ARGV) do |opts, optioner|
-  opts.on('-n name', '--name name', 'Copy the master ip for this cloud')    { |c| optioner.cloudname c }
+  opts.on('-n name', '--name name', 'Copy an ip from this cloud to the clipboard')    { |c| optioner.cloudname c }
 end
 
-o.loaded_clouds.each do |cloud|
+o.loaded_clouds.each do |cld|
   
-  with_cloud(cloud, {:location => @location}) do
-    Kernel.system "echo #{master.ip.chomp} | pbcopy"
-  end
+  node = cld.nodes(:status => "running").first
+  ip = node.ip
+  puts "ip: #{ip}"
+  Kernel.system "echo #{ip} | pbcopy"
   
 end

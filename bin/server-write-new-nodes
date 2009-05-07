@@ -11,11 +11,11 @@ end
 o.loaded_clouds.each do |cloud|
   with_cloud(cloud) do    
 
-    new_nodes_file = "#{Base.manifest_path}/nodes/nodes.pp"
+    new_nodes_file = "#{Default.manifest_path}/nodes/nodes.pp"
             
     str = returning Array.new do |arr|
       arr << "node default { include poolparty }"
-      list_of_running_instances.each do |ri| 
+      nodes(:status => "running").each do |ri| 
         arr << "node \"#{ri.name}\" inherits default {}"
       end
     end.join("\n")

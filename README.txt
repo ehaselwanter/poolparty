@@ -9,18 +9,9 @@ with language such as:
 
 pool :cloud do
  cloud :app do
-  apache do
-   has_virtualhost(:name => "/var/www/sites/poolpartyrb.com")
-  end
+   instances 2..10
  end
 end
-
-== FEATURES/PROBLEMS:
-
-* Written in Ruby and Erlang
-* Written from the ground up to be extensible with plugins
-* Easy git-style commands to communicate with your clouds
-* Much much more
 
 == SYNOPSIS:
 
@@ -30,6 +21,16 @@ required software to glue the cloud together on the instances as listed below.
 PoolParty is easily configuration. In fact, it makes little assumptions about your development environment and allows 
 several options on how to begin configuring the cloud.
 
+== WHAT NEXT:
+* PoolParty::Resources - learn how to use resources in your <tt>clouds.rb</tt>
+
+== FEATURES/PROBLEMS:
+
+* Written in Ruby and Erlang
+* Written from the ground up to be extensible with plugins
+* Easy git-style commands to communicate with your clouds
+* Much much more
+
 == REQUIREMENTS:
 
 Ruby
@@ -38,18 +39,6 @@ Erlang
 == INSTALL:
 
 sudo gem install auser-poolparty
-
-== TODO:
-* Update hot reloading of puppet (force-reload?)
-* Add pingback for nodes to master when failure occurs
-* Add become master for the nodes
-* Add hot reload to haproxy while reconfiguring
-* Replace services with Runit
-* Refactor provisioning to use erlang
-* Add queuing of tasks on the messenger
-* Add syntax checker on the manifests
-* Move in collectd support
-* Add master query
 
 == LICENSE:
 
